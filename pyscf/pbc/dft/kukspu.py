@@ -172,3 +172,40 @@ class KUKSpU(kuks.KUKS):
 
     def nuc_grad_method(self):
         raise NotImplementedError
+    
+if __name__ == '__main__':
+    # Example usage / test
+    from pyscf.pbc import gto
+    cell = gto.Cell()
+    cell.unit = 'A'
+    cell.atom = 'C 0.,  0.,  0.; C 0.8917,  0.8917,  0.8917'
+    cell.a = '''0.      1.7834  1.7834
+                1.7834  0.      1.7834
+                1.7834  1.7834  0.    '''
+    cell.basis = 'gth-dzvp'
+    cell.pseudo = 'gth-pade'
+    cell.verbose = 5
+    cell.build()
+
+    kmesh = [2, 2, 2]
+    kpts = cell.make_kpts(kmesh, wrap_around=True)
+
+    # Example: Onsite U on "1 C 2p", plus an intersite V between
+    # the p-orbitals of atom0 and atom1 (toy example).
+    U_idx = ["1 C 2p"]
+    U_val = [5.0]  # eV or a.u., be consistent
+
+    # Suppose we know local orbitals for atoms are [3,4,5], [6,7,8]
+    V_idx = [([3,4,5], [6,7,8])]
+    V_val = [1.0]
+
+    mf = KUKSpU(cell, kpts,
+                 U_idx=U_idx, U_val=U_val,
+                 minao_ref='gth-szv')
+    mf.conv_tol = 1e-10
+
+    print("Running DFT+U+V SCF with the improved prototype...")
+    e_tot = mf.kernel()
+    print("Final E_tot (DFT+U+V):", e_tot)
+    #  -11.167816045915451
+    #  -11.304387385317424

@@ -38,7 +38,7 @@ from pyscf import lo
 from pyscf.lo import iao
 from pyscf.pbc import gto as pgto
 
-def get_veff(ks, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
+def get_veff(self, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
              kpts=None, kpts_band=None):
     """
     Coulomb + XC functional + Hubbard U terms.
@@ -63,13 +63,13 @@ def get_veff(ks, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
     if kpts is None: kpts = ks.kpts
 
     # J + V_xc
-    vxc = super(ks.__class__, ks).get_veff(cell, dm, dm_last=dm_last,
-                                           vhf_last=vhf_last, hermi=hermi, kpts=kpts,
-                                           kpts_band=kpts_band)
+    vxc = super(KRKSpU, self).get_veff(cell, dm, dm_last=dm_last,
+                                           vhf_last=vhf_last, hermi=hermi,
+                                           kpts=kpts, kpts_band=kpts_band)
 
     # V_U
-    C_ao_lo = ks.C_ao_lo
-    ovlp = ks.get_ovlp()
+    C_ao_lo = self.C_ao_lo
+    ovlp = self.get_ovlp()
     nkpts = len(kpts)
     nlo = C_ao_lo.shape[-1]
 
@@ -84,14 +84,14 @@ def get_veff(ks, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
 
     E_U = 0.0
     weight = getattr(kpts, "weights_ibz", np.repeat(1.0/nkpts, nkpts))
-    logger.info(ks, "-" * 79)
+    logger.info(self, "-" * 79)
     with np.printoptions(precision=5, suppress=True, linewidth=1000):
-        for idx, val, lab in zip(ks.U_idx, ks.U_val, ks.U_lab):
+        for idx, val, lab in zip(self.U_idx, self.U_val, self.U_lab):
             lab_string = " "
             for l in lab:
                 lab_string += "%9s" %(l.split()[-1])
             lab_sp = lab[0].split()
-            logger.info(ks, "local rdm1 of atom %s: ",
+            logger.info(self, "local rdm1 of atom %s: ",
                         " ".join(lab_sp[:2]) + " " + lab_sp[2][:2])
             U_mesh = np.ix_(idx, idx)
             P_loc = 0.0
@@ -109,11 +109,11 @@ def get_veff(ks, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
                 P_loc = rdm1_lo_0[U_mesh].real
             else:
                 P_loc = P_loc.real / nkpts
-            logger.info(ks, "%s\n%s", lab_string, P_loc)
-            logger.info(ks, "-" * 79)
+            logger.info(self, "%s\n%s", lab_string, P_loc)
+            logger.info(self, "-" * 79)
 
-    if E_U.real < 0.0 and all(np.asarray(ks.U_val) > 0):
-        logger.warn(ks, "E_U (%s) is negative...", E_U.real)
+    if E_U.real < 0.0 and all(np.asarray(self.U_val) > 0):
+        logger.warn(self, "E_U (%s) is negative...", E_U.real)
     vxc = lib.tag_array(vxc, E_U=E_U)
     return vxc
 
@@ -264,8 +264,7 @@ class KRKSpU(krks.KRKS):
                      string, in 'minao'.
             minao_ref: reference for minao orbitals, default is 'MINAO'.
         """
-        super(self.__class__, self).__init__(cell, kpts, xc=xc, exxdiv=exxdiv, **kwargs)
-
+        super(KRKSpU, self).__init__(cell, kpts, xc=xc, exxdiv=exxdiv, **kwargs)
         set_U(self, U_idx, U_val)
 
         if isinstance(C_ao_lo, str):
