@@ -71,7 +71,7 @@ def set_UV(mf, U_idx=None, U_val=None, V_idx=None, V_val=None):
 
 def get_veff(mf, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
              kpts=None, kpts_band=None):
-    r"""
+    """
     Compute the effective potential for DFT+U+V:
       v_eff = (v_Coulomb + v_XC) + v_U + v_V
 
