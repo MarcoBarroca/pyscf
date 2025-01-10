@@ -182,14 +182,14 @@ def get_veff(mf, cell=None, dm=None, dm_last=0, vhf_last=0, hermi=1,
                 dV2 = mdot(SC2, (val_V * P1), SC2.conj().T)
                 vxc[s][k] += (dV1 + dV2).astype(vxc[s][k].dtype, copy=False)
 
-    # Here, you might add a double-counting correction for E_V if your functional
+    # Here, we might add a double-counting correction for E_V if the functional
     # calls for it. For a more advanced approach, define a separate function:
     #
     #   E_V_dc = something(...) 
     #   E_V -= E_V_dc
     #   vxc[s][k] -= derivative_of(E_V_dc)
     #
-    # which you handle similarly as above. 
+    # which we handle similarly as above. 
 
     # Attach E_V to vxc for later retrieval in energy_elec
     # If the parent code already put E_V, we add to it
